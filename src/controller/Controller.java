@@ -1,10 +1,8 @@
 package controller;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -30,13 +28,24 @@ public class Controller {
     private PasswordField password;
 
     @FXML
-    private Label passwordLength;
+    private Label informLabel;
 
     @FXML
     private Button crypt;
 
     @FXML
     private Button decrypt;
+
+
+    @FXML
+    private void help(){
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Cryptor");
+        alert.setHeaderText(null);
+        alert.setContentText("Program szyfrujący, działa na kodowaniu SO-8859-1. \nWersja 2.0 stabilna");
+
+        alert.showAndWait();
+    }
 
 
     @FXML
@@ -53,15 +62,22 @@ public class Controller {
 
             saveData();
 
+            informLabel.setText("Zaszyfrowano");
+            informLabel.setTextFill(Color.web("#00C300"));
+            file.delete();
+
         } catch (IOException e) {
             e.printStackTrace();
+            informLabel.setText("Coś poszło nie tak");
+            informLabel.setTextFill(Color.rgb(255,0,0));
         }
 
     }
 
     private void saveData() throws IOException {
 
-        Writer writer = new OutputStreamWriter(new FileOutputStream(file.getAbsoluteFile()), charset);
+        System.out.println(file.getParent());
+        Writer writer = new OutputStreamWriter(new FileOutputStream(file.getParent() + "/crypted.txt"), charset);
 
         String veryTemp = "";
         for (String s : crypted) {
@@ -75,21 +91,22 @@ public class Controller {
     private String readFromFile() throws IOException {
         String line;
         String readed;
-        FileReader reader = new FileReader(file);
-        BufferedReader bufferedReader = new BufferedReader(reader);
 
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(
+                        new FileInputStream(file), charset));
         StringBuilder builder = new StringBuilder();
 
-        line = bufferedReader.readLine();
+        line = in.readLine();
 
         while (line != null) {
             builder.append(line);
-            line = bufferedReader.readLine();
+            line = in.readLine();
             System.out.println("test");
             if (line != null) builder.append("\n");
         }
 
-        bufferedReader.close();
+        in.close();
 
         readed = builder.toString();
 
@@ -190,19 +207,20 @@ public class Controller {
 
             System.out.println(decrypted);
 
-            FileWriter fileWriter = new FileWriter(file.getAbsoluteFile());
+            FileWriter fileWriter = new FileWriter(file.getParent() + "/decrypted.txt");
             PrintWriter printWriter = new PrintWriter(fileWriter);
             printWriter.print(decrypted.toString());
             printWriter.close();
 
+            informLabel.setText("Odszyfrowano");
+            informLabel.setTextFill(Color.web("#00C300"));
+            file.delete();
+
         } catch (IOException e) {
             e.printStackTrace();
+            informLabel.setText("Coś poszło nie tak");
+            informLabel.setTextFill(Color.rgb(255,0,0));
         }
-
-    }
-
-    @FXML
-    private void help() {
 
     }
 
@@ -219,11 +237,13 @@ public class Controller {
             if (newValue.length() < 8) {
                 crypt.setDisable(true);
                 decrypt.setDisable(true);
-                passwordLength.setVisible(true);
+                informLabel.setVisible(true);
+                informLabel.setText("Hasło musi mieć co najmniej 8 znaków");
+                informLabel.setTextFill(Color.color(1,0,0));
             } else {
                 crypt.setDisable(false);
                 decrypt.setDisable(false);
-                passwordLength.setVisible(false);
+                informLabel.setVisible(false);
             }
         });
     }
